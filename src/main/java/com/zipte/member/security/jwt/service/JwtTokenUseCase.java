@@ -1,16 +1,16 @@
 package com.zipte.member.security.jwt.service;
 
-import com.zipte.member.server.domain.user.User;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.core.Authentication;
 
 public interface JwtTokenUseCase {
 
     // 액세스 토큰 생성하기
-    String createAccessToken(User user);
+    String createAccessToken(Authentication authentication);
 
     // 리프레쉬 토큰 생성하기
-    String createRefreshToken(HttpServletResponse response, User user);
+    void createRefreshToken(HttpServletResponse response, Authentication authentication);
 
     // 재발급 하기
     String reissueByRefreshToken(HttpServletRequest request, HttpServletResponse response);

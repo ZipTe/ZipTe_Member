@@ -5,7 +5,6 @@ import com.zipte.member.core.response.ApiResponse;
 import com.zipte.member.security.jwt.service.JwtTokenService;
 import com.zipte.member.security.oauth2.domain.PrincipalDetails;
 import com.zipte.member.server.adapter.in.web.dto.response.UserLoginResponse;
-import com.zipte.member.server.adapter.in.web.dto.response.UserResponse;
 import com.zipte.member.server.domain.user.User;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -37,9 +36,9 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
         log.info("[onAuthenticationSuccess] user={}", user);
 
-        String accessToken = tokenService.createAccessToken(user);
+        String accessToken = tokenService.createAccessToken(authentication);
 
-        tokenService.createRefreshToken(response, user);
+        tokenService.createRefreshToken(response, authentication);
 
         // ApiResponse에 담을 데이터 (Map 혹은 DTO)
 

@@ -10,7 +10,6 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Getter
 @Builder
@@ -28,6 +27,13 @@ public class PrincipalDetails implements OAuth2User{
                 .build();
     }
 
+    public static PrincipalDetails of(User user) {
+        return PrincipalDetails.builder()
+                .user(user)
+                .attributes(null)
+                .build();
+    }
+
     /// 로직
     @Override
     public Map<String, Object> getAttributes() {
@@ -36,18 +42,14 @@ public class PrincipalDetails implements OAuth2User{
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return user.getRoles().stream().map(o -> new SimpleGrantedAuthority(
-                o.getRole()
-        )).collect(Collectors.toList());
+        return user.getRoles().stream()
+                .map(role -> new SimpleGrantedAuthority(role.getRole()))
+                .toList();
     }
 
 
     @Override
     public String getName() {
-        return user.getEmail();
-    }
-
-    public String getUsername() {
         return user.getUsername();
     }
 

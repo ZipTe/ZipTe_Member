@@ -3,16 +3,18 @@ package com.zipte.member.security.jwt.service;
 import com.zipte.member.security.jwt.domain.JwtToken;
 import com.zipte.member.security.jwt.domain.JwtTokenRedisRepository;
 import com.zipte.member.security.jwt.provider.JwtTokenProvider;
+import com.zipte.member.security.oauth2.domain.PrincipalDetails;
 import com.zipte.member.server.application.out.user.UserPort;
-import com.zipte.member.server.domain.user.User;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
@@ -31,28 +33,30 @@ public class JwtTokenService implements JwtTokenUseCase {
 
     // 액세스 토큰 생성하기
     @Override
-    public String createAccessToken(User user) {
-        return provider.createAccessToken(user);
+    public String createAccessToken(Authentication authentication) {
+        return provider.generateAccessToken(authentication);
     }
 
     // 리프레쉬 토큰 생성하기
     @Override
-    public String createRefreshToken(HttpServletResponse response, User user) {
+    public void createRefreshToken(HttpServletResponse response, Authentication authentication) {
 
         // 토큰을 발급한다.
-        String refreshToken = provider.createRefreshToken(user);
+        String refreshToken = provider.generateRefreshToken(authentication);
 
         // 만료 시간 설정
-        LocalDateTime expiredAt = LocalDateTime.now().plusSeconds(REFRESH_TOKEN_EXPIRATION_TIME);
+        LocalDateTime plusSeconds = LocalDateTime.now().plusSeconds(REFRESH_TOKEN_EXPIRATION_TIME);
+        Long expiredAt = plusSeconds.atZone(ZoneId.systemDefault()).toEpochSecond();
+
+        /// 인증 객체에서 정보 가져오기
+        PrincipalDetails principalDetails = (PrincipalDetails) authentication.getPrincipal();
 
         // 해당 토큰을 레디스에 저장한다.
-        JwtToken jwtToken = JwtToken.of(user.getId(), refreshToken, expiredAt);
+        JwtToken jwtToken = JwtToken.of(principalDetails.getId(), refreshToken, expiredAt);
         repository.save(jwtToken);
 
         // 토큰을 쿠키에 저장한다.
         setRefreshTokenInCookie(response, refreshToken);
-
-        return refreshToken;
     }
 
     // 재발급 하기
@@ -64,7 +68,7 @@ public class JwtTokenService implements JwtTokenUseCase {
                 .orElseThrow(() -> new NoSuchElementException("쿠키에 RefreshToken 존재하지 않습니다."));
 
         // 쿠키 validate 진행한다.
-        if (provider.validateJwt(refreshToken)) {
+        if (provider.validateToken(refreshToken)) {
             throw new SecurityException("유효하지 않은 토큰입니다.");
         };
 
@@ -73,10 +77,9 @@ public class JwtTokenService implements JwtTokenUseCase {
                 .orElseThrow(() -> new SecurityException("DB에 RefreshToken 존재하지 않습니다."));
 
         // 유저를 조회한다.
-        User user = userPort.loadUserById(jwtToken.getUserId())
-                .orElseThrow(() -> new NoSuchElementException("해당하는 유저가 존재하지 않습니다."));
+        Authentication authentication = provider.getAuthentication(jwtToken.getRefreshToken());
 
-        return provider.createRefreshToken(user);
+        return provider.generateAccessToken(authentication);
     }
 
     @Override

@@ -22,10 +22,10 @@ public class JwtToken {
     private String refreshToken;
 
     @TimeToLive(unit = TimeUnit.DAYS)
-    private LocalDateTime expireTime;
+    private Long expireTime;
 
     /// 정적 팩토리 메소드
-    public static JwtToken of(Long userId, String refreshToken, LocalDateTime expireTime) {
+    public static JwtToken of(Long userId, String refreshToken, Long expireTime) {
         return JwtToken.builder()
                 .userId(userId)
                 .refreshToken(refreshToken)

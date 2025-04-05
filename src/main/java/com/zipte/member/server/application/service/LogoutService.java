@@ -1,6 +1,5 @@
 package com.zipte.member.server.application.service;
 
-import com.zipte.member.security.jwt.provider.JwtTokenProvider;
 import com.zipte.member.security.jwt.service.JwtTokenService;
 import com.zipte.member.security.jwt.service.JwtTokenUseCase;
 import com.zipte.member.server.application.in.auth.LogoutUserUseCase;
@@ -14,20 +13,13 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class LogoutService implements LogoutUserUseCase {
 
-    private final UserPort userPort;
-
     /// 토큰 제공
-    private final JwtTokenProvider jwtTokenProvider;
     private final JwtTokenUseCase tokenService;
 
-
     /// 생성자
-    public LogoutService(UserPort userPort, JwtTokenProvider jwtTokenProvider, JwtTokenService tokenService) {
-        this.userPort = userPort;
-        this.jwtTokenProvider = jwtTokenProvider;
+    public LogoutService(JwtTokenService tokenService) {
         this.tokenService = tokenService;
     }
-
 
     @Override
     public void logout(HttpServletRequest request, HttpServletResponse response) {
