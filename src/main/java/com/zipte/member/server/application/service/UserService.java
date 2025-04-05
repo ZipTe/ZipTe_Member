@@ -44,15 +44,6 @@ public class UserService implements GetUserUseCase, UpdateUserUseCase {
             user.changeNickname(request.getNickname());
         }
 
-        // 생일이 요청에 있으면 수정
-        if (request.getBirthday() != null && !request.getBirthday().isEmpty()) {
-            user.changeBirthday(request.getBirthday());
-        }
-
-        // 설명이 요청에 있으면 수정
-        if (request.getDescription() != null && !request.getDescription().isEmpty()) {
-            user.changeDescription(request.getDescription());
-        }
 
         // 이미지 URL이 요청에 있으면 수정
         if (request.getImageUrl() != null && !request.getImageUrl().isEmpty()) {
@@ -60,7 +51,6 @@ public class UserService implements GetUserUseCase, UpdateUserUseCase {
         }
 
         log.info(user.getNickname());
-        log.info(user.getDescription());
 
         userPort.updateUser(user);
 

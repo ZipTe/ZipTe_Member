@@ -1,6 +1,7 @@
 package com.zipte.member.server.domain.user;
 
 import com.zipte.member.server.domain.BaseDomain;
+import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,6 +17,9 @@ public class User extends BaseDomain {
 
     private Long id;
 
+    private String socialId;
+
+    // 이메일은 중복 허용
     private String email;
 
     private String username;
@@ -28,23 +32,22 @@ public class User extends BaseDomain {
 
     private OAuthProvider social;
 
-    private String description;
+    private UserConsent consent;
 
     private List<UserRole> roles;
 
-    private UserConsent consent;
-
 
     /// 정적 팩토리 메소드 생성자
-    public static User of(String email, String username, String nickname, String imageUrl, String description, String birthday, OAuthProvider social) {
+    public static User of(String socialId, String email, String username, String nickname, String imageUrl, String birthday, OAuthProvider social, UserConsent consent) {
         return User.builder()
+                .socialId(socialId)
                 .email(email)
                 .username(username)
                 .nickname(nickname)
                 .imageUrl(imageUrl)
                 .social(social)
-                .description(description)
                 .birthday(birthday)
+                .consent(consent)
                 .build();
     }
 
@@ -58,13 +61,6 @@ public class User extends BaseDomain {
         this.imageUrl = imageUrl;
     }
 
-    public void changeDescription(String description) {
-        this.description = description;
-    }
-
-    public void changeBirthday(String birthday) {
-        this.birthday = birthday;
-    }
-
 
 }
+

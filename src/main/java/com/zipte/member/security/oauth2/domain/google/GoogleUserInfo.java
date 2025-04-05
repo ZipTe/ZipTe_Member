@@ -12,26 +12,26 @@ public class GoogleUserInfo implements OAuth2UserInfo {
 
     @Override
     public String getProvider() {
-        return "Google";
+        return "GOOGLE";  // 소문자로 통일 추천
     }
 
     @Override
     public String getProviderId() {
-        return "";
+        return attributes.get("sub").toString();
     }
 
     @Override
     public String getEmail() {
-        return "";
+        return attributes.get("email").toString();
     }
 
     @Override
     public String getUserName() {
-        return "";
+        return attributes.get("name").toString();
     }
 
     @Override
     public String getImageUrl() {
-        return "";
+        return attributes.get("picture").toString();
     }
 }

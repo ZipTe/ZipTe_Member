@@ -3,54 +3,62 @@ package com.zipte.member.security.oauth2.domain.kakao;
 import com.zipte.member.security.oauth2.domain.OAuth2UserInfo;
 import lombok.RequiredArgsConstructor;
 
+import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 public class KakaoUserInfo implements OAuth2UserInfo {
 
     private final Map<String, Object> attributes;
+    private final Map<String, Object> account;
+    private final Map<String, Object> profile;
+
+    @SuppressWarnings("unchecked")
+    public KakaoUserInfo(Map<String, Object> attributes) {
+        this.attributes = attributes;
+        this.account = Optional.ofNullable(attributes.get("kakao_account"))
+                .filter(Map.class::isInstance)
+                .map(m -> (Map<String, Object>) m)
+                .orElse(Collections.emptyMap());
+
+        this.profile = Optional.ofNullable(account.get("profile"))
+                .filter(Map.class::isInstance)
+                .map(m -> (Map<String, Object>) m)
+                .orElse(Collections.emptyMap());
+    }
 
     @Override
     public String getProvider() {
-        return "kakao";
+        return "KAKAO";
     }
 
     @Override
     public String getProviderId() {
-        return attributes.get("id").toString();  // 카카오의 기본 ID
+        return  Optional.ofNullable(attributes.get("id"))
+                .map(Object::toString)
+                .orElse("Unknown");
     }
 
     @Override
     public String getEmail() {
-        Map<String, Object> kakaoAccount = (Map<String, Object>) attributes.get("kakao_account");
-        return kakaoAccount != null ? kakaoAccount.get("email").toString() : null;
+        return Optional.ofNullable(account.get("email"))
+                .map(Object::toString)
+                .orElse("No email provided");
     }
 
     @Override
     public String getUserName() {
-        Map<String, Object> kakaoAccount = (Map<String, Object>) attributes.get("kakao_account");
-        if (kakaoAccount != null) {
-            Map<String, Object> profile = (Map<String, Object>) kakaoAccount.get("profile");
-            return profile != null ? profile.get("nickname").toString() : null;
-        }
-        return null;
+        return Optional.ofNullable(profile.get("nickname"))
+                .map(Object::toString)
+                .orElse("No name provided");
     }
 
     @Override
     public String getImageUrl() {
-        Map<String, Object> kakaoAccount = (Map<String, Object>) attributes.get("kakao_account");
-        if (kakaoAccount != null) {
-            Map<String, Object> profile = (Map<String, Object>) kakaoAccount.get("profile");
-            return profile != null ? profile.get("profile_image_url").toString() : null;
-        }
-        return null;
-    }
 
-    public String getSocialId() {
-        return getProviderId(); // 카카오에서는 id가 social_id 역할을 함
-    }
-
-    public String getName() {
-        return getUserName(); // 닉네임을 Name으로 매핑
+        return Optional.ofNullable(profile.get("profile_image_url"))
+                .map(Object::toString)
+                .orElse("No image provided");
     }
 }

@@ -48,7 +48,8 @@ public class SecurityConfig {
                         request.requestMatchers(
                                 new AntPathRequestMatcher("/auth/success"),
                                 new AntPathRequestMatcher("/login/*"),
-                                new AntPathRequestMatcher("/signup")
+                                new AntPathRequestMatcher("/oauth2/**"),
+                                new AntPathRequestMatcher("/oauth2/session-user")
                         ).permitAll()
                 )
 

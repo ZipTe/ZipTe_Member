@@ -1,30 +1,24 @@
 package com.zipte.member.server.adapter.in.web.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.zipte.member.server.domain.user.User;
+import lombok.Builder;
+import lombok.Data;
+import lombok.Getter;
 
-@JsonPropertyOrder({"email", "accessToken", "firstLogin"})
+@Getter
+@Data
+@Builder
+@JsonPropertyOrder({"email", "accessToken"})
 public class UserLoginResponse {
 
     private final String email;
     private final String accessToken;
-    private final boolean firstLogin;
 
-    public UserLoginResponse(User user, String accessToken, boolean firstLogin) {
-        this.email = user.getEmail();
-        this.accessToken = accessToken;
-        this.firstLogin = firstLogin;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public String getAccessToken() {
-        return accessToken;
-    }
-    public boolean isFirstLogin() {
-        return firstLogin;
+    public static UserLoginResponse from(String email, String accessToken) {
+        return UserLoginResponse.builder()
+                .email(email)
+                .accessToken(accessToken)
+                .build();
     }
 
 }

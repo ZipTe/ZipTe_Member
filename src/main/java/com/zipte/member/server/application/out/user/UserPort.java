@@ -1,6 +1,7 @@
 package com.zipte.member.server.application.out.user;
 
 
+import com.zipte.member.server.domain.user.OAuthProvider;
 import com.zipte.member.server.domain.user.User;
 
 import java.util.Optional;
@@ -14,9 +15,9 @@ public interface UserPort {
     User updateUser(User user);
 
     /// 조회하기
-    boolean loadExistingEmail(String email);
+    boolean checkExistingBySocialAndSocialId(OAuthProvider social, String socialId);
 
     Optional<User> loadUserById(Long userId);
 
-    Optional<User> loadUserByEmail(String email);
+    Optional<User> loadUserBySocialAndSocialId(OAuthProvider social, String socialId);
 }

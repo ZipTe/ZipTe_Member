@@ -2,17 +2,21 @@ package com.zipte.member.server.adapter.in.web;
 
 import com.zipte.member.core.response.ApiResponse;
 import com.zipte.member.security.jwt.service.JwtTokenUseCase;
-import com.zipte.member.server.adapter.in.web.dto.request.AuthFirstTimeRequest;
+import com.zipte.member.security.oauth2.domain.OAuth2UserInfo;
+import com.zipte.member.server.adapter.in.web.dto.request.UserRegisterRequest;
+import com.zipte.member.server.adapter.in.web.dto.response.OAuth2UserInfoResponse;
 import com.zipte.member.server.application.in.auth.AuthUserUseCase;
-import com.zipte.member.server.domain.user.User;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+@Slf4j
 @RestController
-@RequestMapping()
+@RequestMapping("/oauth2")
 @RequiredArgsConstructor
 public class AuthController {
 
@@ -20,20 +24,24 @@ public class AuthController {
     private final AuthUserUseCase authService;
     private final JwtTokenUseCase tokenService;
 
+    @GetMapping("/session-user")
+    public ApiResponse<OAuth2UserInfoResponse> getSessionUser(HttpSession session) {
 
-    @GetMapping("/signup")
-    public String home() {
-        return "체크 합니다.";
+        OAuth2UserInfo userInfo = (OAuth2UserInfo) session.getAttribute("user");
+        OAuth2UserInfoResponse response = OAuth2UserInfoResponse.from(userInfo);
+        log.info("로그 {}", response.toString());
+        return ApiResponse.ok(response);
     }
 
-    // 최초 로그인 시, 유저의 추가 정보 기입
-    @PutMapping("/{email}")
-    public ApiResponse<User> updateUser(
-            @PathVariable String email,
-            @RequestBody @Valid AuthFirstTimeRequest request) {
-        User user = authService.updateInfo(email, request);
 
-        return ApiResponse.ok(user);
+    // 최초 로그인 시, 유저의 추가 정보 기입
+    @PostMapping()
+    public ApiResponse<String> registerUser(
+            @RequestBody @Valid UserRegisterRequest request) {
+
+        authService.registerUser(request);
+
+        return ApiResponse.ok("가입이 완료되엇습니다.");
     }
 
     // 토큰 재발급

@@ -1,7 +1,9 @@
 package com.zipte.member.server.adapter;
 
+import com.zipte.member.server.adapter.out.jpa.user.UserJpaEntity;
 import com.zipte.member.server.adapter.out.jpa.user.UserJpaRepository;
 import com.zipte.member.server.application.out.user.UserPort;
+import com.zipte.member.server.domain.user.OAuthProvider;
 import com.zipte.member.server.domain.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -16,7 +18,10 @@ public class UserPersistenceAdapter implements UserPort {
 
     @Override
     public User saveUser(User user) {
-        return null;
+        var entity = UserJpaEntity.from(user);
+
+        return repository.save(entity)
+                .toDomain();
     }
 
     @Override
@@ -25,8 +30,9 @@ public class UserPersistenceAdapter implements UserPort {
     }
 
     @Override
-    public boolean loadExistingEmail(String email) {
-        return false;
+    public boolean checkExistingBySocialAndSocialId(OAuthProvider social, String socialId ) {
+
+        return repository.existsBySocialAndSocialId(social, socialId);
     }
 
     @Override
@@ -35,7 +41,9 @@ public class UserPersistenceAdapter implements UserPort {
     }
 
     @Override
-    public Optional<User> loadUserByEmail(String email) {
-        return Optional.empty();
+    public Optional<User> loadUserBySocialAndSocialId(OAuthProvider social, String socialId) {
+        return repository.findBySocialAndSocialId(social, socialId)
+                .map(UserJpaEntity::toDomain);
     }
+
 }

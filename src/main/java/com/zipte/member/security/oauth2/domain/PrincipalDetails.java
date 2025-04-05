@@ -31,7 +31,7 @@ public class PrincipalDetails implements OAuth2User{
     /// 로직
     @Override
     public Map<String, Object> getAttributes() {
-        return null;
+        return attributes;
     }
 
     @Override
@@ -54,4 +54,9 @@ public class PrincipalDetails implements OAuth2User{
     public Long getId() {
         return user.getId();
     }
+
+    public String getEmail() {
+        return user.getEmail();
+    }
+
 }
