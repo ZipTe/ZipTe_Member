@@ -1,6 +1,6 @@
 package com.zipte.member.security.jwt.provider;
 
-import com.zipte.member.security.jwt.provider.exception.CustomJWTException;
+import com.zipte.member.security.jwt.exception.CustomJWTException;
 import com.zipte.member.security.oauth2.domain.PrincipalDetails;
 import com.zipte.member.server.application.out.user.UserPort;
 import com.zipte.member.server.domain.user.User;
@@ -8,13 +8,14 @@ import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 import javax.crypto.SecretKey;
 
@@ -29,6 +30,7 @@ import static org.springframework.security.oauth2.core.OAuth2ErrorCodes.INVALID_
 @RequiredArgsConstructor
 public class JwtTokenProvider {
 
+    private static final Logger log = LoggerFactory.getLogger(JwtTokenProvider.class);
     @Value("${jwt.key}")
     private String key;
     private SecretKey secretKey;
@@ -92,7 +94,7 @@ public class JwtTokenProvider {
         // 권한을 SimpleGrantedAuthority로 변환
         Collection<? extends GrantedAuthority> authorities =
                 authoritiesList.stream()
-                .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+                .map(SimpleGrantedAuthority::new)
                 .toList();
 
         // userId를 Long으로 안전하게 변환
@@ -100,7 +102,7 @@ public class JwtTokenProvider {
 
         // 해당 userId로 Member를 조회
         User user = userPort.loadUserById(userId)
-                .orElseThrow(() -> new CustomJWTException(INVALID_TOKEN));
+                .orElseThrow(() -> new NoSuchElementException("해당 멤버가 존재하지 않습니다."));
 
         PrincipalDetails details = PrincipalDetails.of(user);
 
@@ -110,17 +112,20 @@ public class JwtTokenProvider {
 
     // 토큰 검증
     public boolean validateToken(String token) {
-        if (!StringUtils.hasText(token)) {
+        try {
+            Claims claims = parseClaims(token);
+
+            return claims.getExpiration().after(new Date());
+        } catch (Exception e) {
             return false;
         }
-
-        Claims claims = parseClaims(token);
-        return claims.getExpiration().after(new Date());
     }
+
 
     /// 내부 함수
     private Claims parseClaims(String token) {
         try {
+
             // JWT 파서를 빌드하고 서명된 토큰을 파싱
             return Jwts.parserBuilder()
                     .setSigningKey(secretKey)  // 서명 키를 설정
@@ -128,10 +133,9 @@ public class JwtTokenProvider {
                     .parseClaimsJws(token)  // 서명된 JWT 토큰을 파싱
                     .getBody();  // Claims 객체 반환
         } catch (ExpiredJwtException e) {
-            // 만료된 JWT 토큰의 경우 만료된 Claims 반환
             return e.getClaims();
+
         } catch (MalformedJwtException e) {
-            // 잘못된 JWT 토큰 형식일 경우 예외 처리
             throw new CustomJWTException(INVALID_TOKEN);
         }
     }

@@ -1,4 +1,4 @@
-package com.zipte.member.security.jwt.provider.exception;
+package com.zipte.member.security.jwt.exception;
 
 public class CustomJWTException extends RuntimeException {
 

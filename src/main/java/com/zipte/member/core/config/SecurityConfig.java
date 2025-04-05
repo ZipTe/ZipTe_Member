@@ -1,5 +1,7 @@
 package com.zipte.member.core.config;
 
+import com.zipte.member.security.jwt.handler.JwtAuthenticationFilter;
+import com.zipte.member.security.jwt.util.RequestMatcherHolder;
 import com.zipte.member.security.oauth2.handler.OAuth2FailureHandler;
 import com.zipte.member.security.oauth2.handler.OAuth2SuccessHandler;
 import com.zipte.member.security.oauth2.service.OAuth2UserService;
@@ -12,7 +14,10 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import static com.zipte.member.server.domain.user.UserRole.ADMIN;
+import static com.zipte.member.server.domain.user.UserRole.MEMBER;
 
 @Configuration
 @RequiredArgsConstructor
@@ -22,11 +27,13 @@ public class SecurityConfig {
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
     private final OAuth2FailureHandler oAuth2FailureHandler;
 
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final RequestMatcherHolder requestMatcherHolder;
+
     @Bean
-    public WebSecurityCustomizer webSecurityCustomizer() { // security를 적용하지 않을 리소스
+    public WebSecurityCustomizer webSecurityCustomizer() {
         return web -> web.ignoring()
-                // error endpoint를 열어줘야 함, favicon.ico 추가!
-                .requestMatchers("/error", "/favicon.ico");
+                .requestMatchers("/login?error", "/error", "/favicon.ico");
     }
 
     @Bean
@@ -34,23 +41,23 @@ public class SecurityConfig {
         http
                 // rest api 설정
                 .csrf(AbstractHttpConfigurer::disable) // csrf 비활성화 -> cookie를 사용하지 않으면 꺼도 된다. (cookie를 사용할 경우 httpOnly(XSS 방어), sameSite(CSRF 방어)로 방어해야 한다.)
-                .cors(AbstractHttpConfigurer::disable) // cors 비활성화 -> 프론트와 연결 시 따로 설정 필요
                 .httpBasic(AbstractHttpConfigurer::disable) // 기본 인증 로그인 비활성화
                 .formLogin(AbstractHttpConfigurer::disable) // 기본 login form 비활성화
                 .logout(AbstractHttpConfigurer::disable) // 기본 logout 비활성화
                 .headers(c -> c.frameOptions(
                         HeadersConfigurer.FrameOptionsConfig::disable).disable()) // X-Frame-Options 비활성화
                 .sessionManagement(c ->
-                        c.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)) // 세션 사용하지 않음
+                        c.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)) // 세션 필요한 경우 사용
 
                 // request 인증, 인가 설정
-                .authorizeHttpRequests(request ->
-                        request.requestMatchers(
-                                new AntPathRequestMatcher("/auth/success"),
-                                new AntPathRequestMatcher("/login/*"),
-                                new AntPathRequestMatcher("/oauth2/**"),
-                                new AntPathRequestMatcher("/oauth2/session-user")
-                        ).permitAll()
+                .authorizeHttpRequests(request -> request
+                        .requestMatchers(requestMatcherHolder.getRequestMatchersByMinRole(null))
+                            .permitAll()
+                        .requestMatchers(requestMatcherHolder.getRequestMatchersByMinRole(MEMBER))
+                            .hasAnyAuthority(MEMBER.getRole(), ADMIN.getRole())
+                        .requestMatchers(requestMatcherHolder.getRequestMatchersByMinRole(ADMIN))
+                            .hasAnyAuthority(ADMIN.getRole())
+                        .anyRequest().permitAll()
                 )
 
                 // oauth2 설정
@@ -60,6 +67,9 @@ public class SecurityConfig {
                                 // 로그인 성공 시 핸들러
                                 .successHandler(oAuth2SuccessHandler)
                                 .failureHandler(oAuth2FailureHandler))
+
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+
         ;
 
         return http.build();
