@@ -1,12 +1,12 @@
 package com.zipte.member.server.domain.user;
 
 import com.zipte.member.server.domain.BaseDomain;
-import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -39,6 +39,11 @@ public class User extends BaseDomain {
 
     /// 정적 팩토리 메소드 생성자
     public static User of(String socialId, String email, String username, String nickname, String imageUrl, String birthday, OAuthProvider social, UserConsent consent) {
+
+        List<UserRole> roles = new ArrayList<>();
+        UserRole role = UserRole.MEMBER;
+        roles.add(role);
+
         return User.builder()
                 .socialId(socialId)
                 .email(email)
@@ -48,6 +53,7 @@ public class User extends BaseDomain {
                 .social(social)
                 .birthday(birthday)
                 .consent(consent)
+                .roles(roles)
                 .build();
     }
 

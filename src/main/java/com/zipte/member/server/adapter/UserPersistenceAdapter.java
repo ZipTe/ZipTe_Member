@@ -37,7 +37,8 @@ public class UserPersistenceAdapter implements UserPort {
 
     @Override
     public Optional<User> loadUserById(Long userId) {
-        return Optional.empty();
+        return repository.findById(userId)
+                .map(UserJpaEntity::toDomain);
     }
 
     @Override

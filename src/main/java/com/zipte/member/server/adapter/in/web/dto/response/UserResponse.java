@@ -13,13 +13,11 @@ public class UserResponse {
 
     private final Long userId;
     private final String nickname;
-    private final String description;
 
     public static UserResponse from(User user) {
         return UserResponse.builder()
                 .userId(user.getId())
                 .nickname(user.getNickname())
-                .description(user.getDescription())
                 .build();
 
     }

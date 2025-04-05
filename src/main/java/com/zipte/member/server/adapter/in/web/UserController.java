@@ -1,11 +1,13 @@
 package com.zipte.member.server.adapter.in.web;
 
 import com.zipte.member.core.response.ApiResponse;
+import com.zipte.member.security.oauth2.domain.PrincipalDetails;
 import com.zipte.member.server.adapter.in.web.dto.request.UserUpdateRequest;
 import com.zipte.member.server.adapter.in.web.dto.response.UserResponse;
 import com.zipte.member.server.application.in.user.GetUserUseCase;
 import com.zipte.member.server.application.in.user.UpdateUserUseCase;
 import com.zipte.member.server.domain.user.User;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -21,17 +23,17 @@ public class UserController {
         this.updateService = updateService;
     }
 
-    @GetMapping("/{userId}")
-    public ApiResponse<UserResponse> getMyInfo(@PathVariable Long userId) {
-        User user = getService.getMyInfo(userId);
+    @GetMapping("/mypage")
+    public ApiResponse<UserResponse> getMyInfo(@AuthenticationPrincipal PrincipalDetails principalDetails) {
+        User user = getService.getMyInfo(principalDetails.getId());
 
         return ApiResponse.ok(UserResponse.from(user));
     }
 
-    @PutMapping("/{userId}")
-    public ApiResponse<String> updateMyInfo(@PathVariable Long userId, @RequestBody UserUpdateRequest request) {
+    @PutMapping()
+    public ApiResponse<String> updateMyInfo(@AuthenticationPrincipal PrincipalDetails principalDetails, @RequestBody UserUpdateRequest request) {
 
-        updateService.updateUser(userId, request);
+        updateService.updateUser(principalDetails.getId(), request);
         return ApiResponse.ok("수정되었습니다.");
     }
 
