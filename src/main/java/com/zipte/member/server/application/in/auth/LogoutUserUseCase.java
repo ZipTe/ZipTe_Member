@@ -1,7 +1,5 @@
 package com.zipte.member.server.application.in.auth;
 
-import com.zipte.member.server.adapter.in.web.dto.response.UserLoginResponse;
-import com.zipte.member.server.application.out.auth.OAuthLoginParams;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 

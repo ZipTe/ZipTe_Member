@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+import java.util.List;
+
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -27,6 +29,10 @@ public class User extends BaseDomain {
     private OAuthProvider social;
 
     private String description;
+
+    private List<UserRole> roles;
+
+    private UserConsent consent;
 
 
     /// 정적 팩토리 메소드 생성자
